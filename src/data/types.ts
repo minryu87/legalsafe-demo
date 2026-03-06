@@ -1,15 +1,4 @@
-// ── 기본 사건 타입 (20건 Base List) ──
-
-export type CaseStatus =
-  | "APPLIED"
-  | "UNDER_REVIEW"
-  | "MORE_INFO"
-  | "REJECTED"
-  | "CONTRACTING"
-  | "IN_LITIGATION"
-  | "WON_PENDING"
-  | "CLOSED_WIN"
-  | "CLOSED_LOSE";
+// ── 공통 등급/타입 ──
 
 export type Grade = "A" | "B" | "C" | "D";
 export type Decision = "Y" | "CONDITIONAL_Y" | "N";
@@ -17,96 +6,6 @@ export type Similarity = "상" | "중" | "하";
 export type Favorability = "유리" | "불리";
 export type Likelihood = "상" | "중" | "하";
 export type LogicOperator = "AND" | "OR";
-
-export interface Case {
-  id: string;
-  applicant: {
-    name: string;
-    age: number;
-    occupation: string;
-    contact: string;
-  };
-  opponent: {
-    name: string;
-    type: string;
-    relation: string;
-  };
-  caseInfo: {
-    title: string;
-    category: "노동" | "민사" | "지식재산" | "행정" | "가사";
-    claimAmount: number;
-    desiredEffect: string;
-    jurisdiction: string;
-    legalRepresentative: {
-      firm: string;
-      lawyers: string[];
-    };
-    overview: string;
-  };
-  status: CaseStatus;
-  fdaGrade?: Grade;
-  fdaScore?: number;
-  expectedAmount?: number;
-  durationMonths?: number;
-  createdAt: string;
-  updatedAt: string;
-  fdaDetail?: FdaDetail;
-  contract?: ContractInfo;
-  finance?: FinanceInfo;
-  lifecycle?: LifecycleInfo;
-}
-
-// ── 계약 정보 ──
-
-export interface ContractInfo {
-  profitShareRate: number;
-  retainerFee: number;
-  successFeeRate: number;
-  signedByApplicant: boolean;
-  signedAt?: string;
-  signatureStatus: "draft" | "sent" | "viewed" | "signed";
-}
-
-// ── 재무 정보 ──
-
-export interface FinanceInfo {
-  payments: Array<{
-    id: string;
-    type: "retainer" | "court_fee" | "success_fee";
-    amount: number;
-    status: "pending" | "approved" | "paid";
-    milestone: string;
-    dueDate: string;
-  }>;
-  recovery?: {
-    judgmentAmount: number;
-    depositStatus: "waiting" | "delayed" | "received";
-    delayDays: number;
-    waterfall?: {
-      litigationCost: number;
-      companyShare: number;
-      applicantShare: number;
-    };
-  };
-}
-
-// ── 라이프사이클 정보 ──
-
-export interface LifecycleInfo {
-  currentStep: number;
-  steps: string[];
-  timeline: Array<{
-    date: string;
-    event: string;
-    description: string;
-    aiSummary?: string;
-  }>;
-  documents: Array<{
-    name: string;
-    type: string;
-    url: string;
-  }>;
-}
 
 // ── FDA 상세 보고서 ──
 
@@ -133,6 +32,12 @@ export interface EvidenceChecklist {
   completeness: Array<{ item: string; result: boolean }>;
   reliability: Array<{ item: string; result: boolean }>;
   specificity: Array<{ item: string; result: boolean }>;
+}
+
+export interface LveItemDetail {
+  grade: Grade;
+  comment: string;
+  details: Array<{ factor: string; content: string; grade: Grade; basis: string }>;
 }
 
 export interface FdaDetail {
@@ -374,21 +279,11 @@ export interface FdaDetail {
   lve: {
     overallGrade: Grade;
     overallComment: string;
-    reputation: {
-      grade: Grade;
-      comment: string;
-      details: Array<{ factor: string; content: string; grade: Grade; basis: string }>;
-    };
-    portfolio: {
-      grade: Grade;
-      comment: string;
-      details: Array<{ factor: string; content: string; grade: Grade; basis: string }>;
-    };
-    retention: {
-      grade: Grade;
-      comment: string;
-      details: Array<{ factor: string; content: string; grade: Grade; basis: string }>;
-    };
+    mediaInfluence: LveItemDetail;       // 미디어 영향도
+    dataEnhancement: LveItemDetail;      // 데이터 고도화
+    portfolioDiversification: LveItemDetail; // 포트폴리오 다각화
+    strategicMarket: LveItemDetail;      // 전략적 시장 선점
+    strategicNetwork: LveItemDetail;     // 전략적 네트워크
   };
 
   // ── 3. FDA 종합 판단 ──
@@ -455,49 +350,38 @@ export interface FdaDetail {
   };
 }
 
-// ── 알림 ──
+// ── 전략 시뮬레이션 (Strategy Simulation) ──
 
-export type NotificationType =
-  | "NEW_APPLICATION"
-  | "REVIEW_READY"
-  | "CONTRACT_SIGNED"
-  | "COURT_UPDATE"
-  | "FINANCE_ALERT";
-
-export interface Notification {
-  id: number;
-  type: NotificationType;
-  caseId: string;
-  message: string;
-  read: boolean;
-  timestamp: string;
+export interface GoldenPath {
+  rank: number;
+  argument: string;
+  legalBasis: string;
+  supportingEvidence: string[];
+  acceptanceRate: number;
+  rationale: string;
 }
 
-// ── 칸반 컬럼 정의 ──
-
-export interface KanbanColumn {
-  key: string;
-  title: string;
-  statuses: CaseStatus[];
+export interface VulnerabilityItem {
+  targetArgument: string;
+  counterargument: string;
+  counterSuccessRate: number;
+  counterCount: number;
+  mitigation: string;
 }
 
-export const KANBAN_COLUMNS: KanbanColumn[] = [
-  { key: "applied", title: "신청 접수", statuses: ["APPLIED"] },
-  { key: "review", title: "심사 중", statuses: ["UNDER_REVIEW", "MORE_INFO"] },
-  { key: "contract", title: "계약 대기", statuses: ["CONTRACTING"] },
-  { key: "litigation", title: "소송 진행 중", statuses: ["IN_LITIGATION"] },
-  { key: "recovery", title: "집행/회수", statuses: ["WON_PENDING"] },
-  { key: "closed", title: "종결", statuses: ["CLOSED_WIN", "CLOSED_LOSE", "REJECTED"] },
-];
+export interface EvidenceGap {
+  evidenceType: string;
+  importance: "high" | "medium" | "low";
+  acceptanceBoost: number;
+  userHas: boolean;
+  recommendation: string;
+}
 
-export const STATUS_LABELS: Record<CaseStatus, string> = {
-  APPLIED: "접수",
-  UNDER_REVIEW: "심사 중",
-  MORE_INFO: "보완 요청",
-  REJECTED: "거절",
-  CONTRACTING: "계약 대기",
-  IN_LITIGATION: "소송 진행 중",
-  WON_PENDING: "회수 대기",
-  CLOSED_WIN: "종결 (승소)",
-  CLOSED_LOSE: "종결 (패소)",
-};
+export interface StrategySimulation {
+  goldenPaths: GoldenPath[];
+  vulnerabilities: VulnerabilityItem[];
+  evidenceGaps: EvidenceGap[];
+  strategySummary: string;
+  winPathProbability: number | null;
+}
+

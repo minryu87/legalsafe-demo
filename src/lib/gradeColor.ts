@@ -44,7 +44,7 @@ export function decisionColor(decision: Decision): string {
 export function decisionLabel(decision: Decision): string {
   switch (decision) {
     case "Y":
-      return "Y (투자 승인)";
+      return "Y (투자 권고)";
     case "CONDITIONAL_Y":
       return "조건부 Y (보류)";
     case "N":

@@ -5,14 +5,13 @@ import { DownloadOutlined } from "@ant-design/icons";
 import GradeBadge from "@/components/shared/GradeBadge";
 import { formatCurrency, formatPercent } from "@/lib/formatCurrency";
 import { decisionLabel, decisionEmoji } from "@/lib/gradeColor";
-import type { FdaDetail, Case, Grade } from "@/data/types";
+import type { FdaDetail, Grade } from "@/data/types";
 
 interface Props {
   detail: FdaDetail;
-  caseData: Case;
 }
 
-export default function ReportTab({ detail, caseData }: Props) {
+export default function ReportTab({ detail }: Props) {
   const { fdaSummary, applicationInfo } = detail;
 
   const handleDownloadPdf = () => {
@@ -108,9 +107,11 @@ export default function ReportTab({ detail, caseData }: Props) {
           종합 등급: <GradeBadge grade={detail.lve.overallGrade} size="small" /> — {detail.lve.overallComment}
         </p>
         <ul>
-          <li>평판 영향도: <GradeBadge grade={detail.lve.reputation.grade} size="small" /> — {detail.lve.reputation.comment}</li>
-          <li>포트폴리오: <GradeBadge grade={detail.lve.portfolio.grade} size="small" /> — {detail.lve.portfolio.comment}</li>
-          <li>리텐션: <GradeBadge grade={detail.lve.retention.grade} size="small" /> — {detail.lve.retention.comment}</li>
+          <li>미디어 영향도: <GradeBadge grade={detail.lve.mediaInfluence.grade} size="small" /> — {detail.lve.mediaInfluence.comment}</li>
+          <li>데이터 고도화: <GradeBadge grade={detail.lve.dataEnhancement.grade} size="small" /> — {detail.lve.dataEnhancement.comment}</li>
+          <li>포트폴리오 다각화: <GradeBadge grade={detail.lve.portfolioDiversification.grade} size="small" /> — {detail.lve.portfolioDiversification.comment}</li>
+          <li>전략적 시장 선점: <GradeBadge grade={detail.lve.strategicMarket.grade} size="small" /> — {detail.lve.strategicMarket.comment}</li>
+          <li>전략적 네트워크: <GradeBadge grade={detail.lve.strategicNetwork.grade} size="small" /> — {detail.lve.strategicNetwork.comment}</li>
         </ul>
 
         <hr style={{ border: "none", borderTop: "1px solid #ddd", margin: "24px 0" }} />

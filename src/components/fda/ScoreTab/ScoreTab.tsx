@@ -276,62 +276,32 @@ export default function ScoreTab({ detail }: Props) {
     },
   ];
 
-  const lveItems = [
-    {
-      key: "reputation",
-      label: <span><TrafficLight grade={lve.reputation.grade} /> 평판 영향도 — {lve.reputation.grade}</span>,
-      children: (
-        <Table
-          dataSource={lve.reputation.details}
-          columns={[
-            { title: "요소", dataIndex: "factor", key: "factor" },
-            { title: "내용", dataIndex: "content", key: "content" },
-            { title: "등급", dataIndex: "grade", key: "grade", render: (g: Grade) => <GradeBadge grade={g} size="small" /> },
-            { title: "근거", dataIndex: "basis", key: "basis" },
-          ]}
-          rowKey="factor"
-          pagination={false}
-          size="small"
-        />
-      ),
-    },
-    {
-      key: "portfolio",
-      label: <span><TrafficLight grade={lve.portfolio.grade} /> 포트폴리오 적합도 — {lve.portfolio.grade}</span>,
-      children: (
-        <Table
-          dataSource={lve.portfolio.details}
-          columns={[
-            { title: "요소", dataIndex: "factor", key: "factor" },
-            { title: "내용", dataIndex: "content", key: "content" },
-            { title: "등급", dataIndex: "grade", key: "grade", render: (g: Grade) => <GradeBadge grade={g} size="small" /> },
-            { title: "근거", dataIndex: "basis", key: "basis" },
-          ]}
-          rowKey="factor"
-          pagination={false}
-          size="small"
-        />
-      ),
-    },
-    {
-      key: "retention",
-      label: <span><TrafficLight grade={lve.retention.grade} /> 고객 리텐션 — {lve.retention.grade}</span>,
-      children: (
-        <Table
-          dataSource={lve.retention.details}
-          columns={[
-            { title: "요소", dataIndex: "factor", key: "factor" },
-            { title: "내용", dataIndex: "content", key: "content" },
-            { title: "등급", dataIndex: "grade", key: "grade", render: (g: Grade) => <GradeBadge grade={g} size="small" /> },
-            { title: "근거", dataIndex: "basis", key: "basis" },
-          ]}
-          rowKey="factor"
-          pagination={false}
-          size="small"
-        />
-      ),
-    },
+  const lveItemDefs = [
+    { key: "mediaInfluence", label: "미디어 영향도", data: lve.mediaInfluence },
+    { key: "dataEnhancement", label: "데이터 고도화", data: lve.dataEnhancement },
+    { key: "portfolioDiversification", label: "포트폴리오 다각화", data: lve.portfolioDiversification },
+    { key: "strategicMarket", label: "전략적 시장 선점", data: lve.strategicMarket },
+    { key: "strategicNetwork", label: "전략적 네트워크", data: lve.strategicNetwork },
   ];
+
+  const lveItems = lveItemDefs.map((item) => ({
+    key: item.key,
+    label: <span><TrafficLight grade={item.data.grade} /> {item.label} — {item.data.grade}</span>,
+    children: (
+      <Table
+        dataSource={item.data.details}
+        columns={[
+          { title: "요소", dataIndex: "factor", key: "factor" },
+          { title: "내용", dataIndex: "content", key: "content" },
+          { title: "등급", dataIndex: "grade", key: "grade", render: (g: Grade) => <GradeBadge grade={g} size="small" /> },
+          { title: "근거", dataIndex: "basis", key: "basis" },
+        ]}
+        rowKey="factor"
+        pagination={false}
+        size="small"
+      />
+    ),
+  }));
 
   return (
     <div>
@@ -373,18 +343,12 @@ export default function ScoreTab({ detail }: Props) {
                 <span><GradeBadge grade={spe.collectionAnalysis.grade} /></span>
               </div>
               <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 8, marginTop: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span>평판 영향도</span>
-                  <GradeBadge grade={lve.reputation.grade} />
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
-                  <span>포트폴리오</span>
-                  <GradeBadge grade={lve.portfolio.grade} />
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
-                  <span>고객 리텐션</span>
-                  <GradeBadge grade={lve.retention.grade} />
-                </div>
+                {lveItemDefs.map((item) => (
+                  <div key={item.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
+                    <span>{item.label}</span>
+                    <GradeBadge grade={item.data.grade} />
+                  </div>
+                ))}
               </div>
             </Space>
           </Card>
