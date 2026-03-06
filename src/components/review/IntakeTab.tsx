@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, Spin, Empty, Button, Modal, Descriptions, Tag } from "antd";
+import { Card, Spin, Empty, Button, Modal, Descriptions, Tag, theme } from "antd";
 import { UserOutlined, AlertOutlined, FileTextOutlined } from "@ant-design/icons";
 import { getApplicantIntake, getAttorneyIntake } from "@/lib/api/intake";
 import type {
@@ -19,6 +19,7 @@ interface Props {
  * - 섹션 2: 변호사 소송 전략 요약
  */
 export default function IntakeTab({ caseId }: Props) {
+  const { token } = theme.useToken();
   const [applicant, setApplicant] = useState<ApplicantIntakeDetailResponse | null>(null);
   const [attorney, setAttorney] = useState<AttorneyIntakeDetailResponse | null>(null);
   const [loadingApplicant, setLoadingApplicant] = useState(true);
@@ -68,7 +69,7 @@ export default function IntakeTab({ caseId }: Props) {
         <Card size="small" style={{ marginBottom: 16 }}>
           <div style={{ textAlign: "center", padding: 16 }}>
             <Spin size="small" />
-            <span style={{ marginLeft: 8, color: "#999" }}>
+            <span style={{ marginLeft: 8, color: token.colorTextTertiary }}>
               신청인 인테이크 로딩 중...
             </span>
           </div>
@@ -137,7 +138,7 @@ export default function IntakeTab({ caseId }: Props) {
       <>
         <Card
           size="small"
-          style={{ border: "1px solid #d9e8ff" }}
+          style={{ border: `1px solid ${token.colorBorderSecondary}` }}
           title={
             <span>
               <UserOutlined style={{ marginRight: 8 }} />
@@ -154,7 +155,7 @@ export default function IntakeTab({ caseId }: Props) {
                 style={{
                   fontWeight: 600,
                   fontSize: 12,
-                  color: "#1677ff",
+                  color: token.colorPrimary,
                   marginBottom: 4,
                 }}
               >
@@ -164,7 +165,7 @@ export default function IntakeTab({ caseId }: Props) {
                 style={{
                   fontSize: 13,
                   lineHeight: 1.8,
-                  background: "#f6f8fa",
+                  background: token.colorFillTertiary,
                   padding: "8px 12px",
                   borderRadius: 6,
                   whiteSpace: "pre-wrap",
@@ -215,7 +216,7 @@ export default function IntakeTab({ caseId }: Props) {
         <Card size="small" style={{ marginBottom: 16 }}>
           <div style={{ textAlign: "center", padding: 16 }}>
             <Spin size="small" />
-            <span style={{ marginLeft: 8, color: "#999" }}>
+            <span style={{ marginLeft: 8, color: token.colorTextTertiary }}>
               변호사 인테이크 로딩 중...
             </span>
           </div>
@@ -262,7 +263,7 @@ export default function IntakeTab({ caseId }: Props) {
     return (
       <Card
         size="small"
-        style={{ border: "1px solid #d9e8ff" }}
+        style={{ border: `1px solid ${token.colorBorderSecondary}` }}
         title={
           <span>
             <UserOutlined style={{ marginRight: 8 }} />
@@ -287,10 +288,10 @@ export default function IntakeTab({ caseId }: Props) {
               style={{
                 fontSize: 13,
                 lineHeight: 1.8,
-                background: item.warn ? "#fff7e6" : "#f6f8fa",
+                background: item.warn ? token.colorWarningBg : token.colorFillTertiary,
                 padding: "8px 12px",
                 borderRadius: 6,
-                border: item.warn ? "1px solid #ffd591" : undefined,
+                border: item.warn ? `1px solid ${token.colorWarningBorder}` : undefined,
                 whiteSpace: "pre-wrap",
               }}
             >
