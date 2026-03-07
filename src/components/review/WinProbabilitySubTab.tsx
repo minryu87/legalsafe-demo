@@ -1,37 +1,28 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import {
   Collapse,
   Card,
   Row,
   Col,
   Tag,
-  List,
   Empty,
   Progress,
-  Statistic,
 } from "antd";
-import {
-  CheckCircleFilled,
-  WarningOutlined,
-  AlertOutlined,
-  TrophyOutlined,
-} from "@ant-design/icons";
 import GradeBadge from "@/components/shared/GradeBadge";
 import GraphTab from "@/components/fda/GraphTab/GraphTab";
 import LogicGraphV3Flow from "@/components/review/LogicGraphV3Flow";
 import SimilarityBubbleChart from "@/components/review/SimilarityBubbleChart";
 import PrecedentCardList from "@/components/review/PrecedentCardList";
 import PrecedentGraphView from "@/components/analysis/PrecedentGraphView";
-import type { FdaDetail, StrategySimulation } from "@/data/types";
+import type { FdaDetail } from "@/data/types";
 import type {
   PrecedentResponse,
   PrecedentGraphResponse,
   ScoringSummaryResponse,
   LogicGraphV3Response,
   SimilarPrecedentsResponse,
-  SimilarPrecedent,
   ScoringGrade,
 } from "@/data/api-types";
 
@@ -41,7 +32,6 @@ import type {
 
 interface Props {
   detail: FdaDetail;
-  strategy: StrategySimulation | null;
   precedents: PrecedentResponse[];
   graphData: PrecedentGraphResponse | null;
   analysisLoading: Record<string, boolean>;
@@ -53,7 +43,7 @@ interface Props {
 }
 
 /* ══════════════════════════════════════════════
-   Section 1: 종합 판단 + 등급
+   Section 1: 종합 판단 (컴팩트 바)
    ══════════════════════════════════════════════ */
 
 const GRADE_LABELS: Record<ScoringGrade, string> = {
@@ -76,530 +66,173 @@ const LEVEL_LABELS: Record<string, string> = {
   low: "낮음",
 };
 
-function OverallJudgmentSection({
-  detail,
-  scoring,
-}: {
-  detail: FdaDetail;
-  scoring: ScoringSummaryResponse | null;
-}) {
-  // v3 scoring data takes priority over demo data
-  if (scoring) {
-    const color = GRADE_COLORS[scoring.grade];
-    return (
-      <Card>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 16,
-            marginBottom: 16,
-          }}
-        >
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: "50%",
-              background: `${color}15`,
-              border: `3px solid ${color}`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 800,
-              fontSize: 16,
-              color,
-            }}
-          >
-            {GRADE_LABELS[scoring.grade]}
-          </div>
-          <div>
-            <div style={{ fontSize: 24, fontWeight: 800 }}>
-              승소확률: {scoring.win_probability}%
-            </div>
-            <div style={{ fontSize: 13, color: "#999" }}>
-              신뢰도: {LEVEL_LABELS[scoring.confidence] ?? scoring.confidence}
-            </div>
-          </div>
-          <div style={{ flex: 1, paddingLeft: 16 }}>
-            <Progress
-              percent={scoring.win_probability}
-              strokeColor={color}
-              showInfo={false}
-              size={{ height: 12 }}
-            />
-          </div>
-        </div>
-
-        <div>
-          <h4 style={{ marginBottom: 8, fontSize: 14 }}>주요 판단 근거:</h4>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {scoring.key_factors.map((f, idx) => (
-              <div
-                key={idx}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "6px 12px",
-                  background: "#fafafa",
-                  borderRadius: 6,
-                }}
-              >
-                <Tag
-                  color={
-                    f.level === "high"
-                      ? "green"
-                      : f.level === "medium"
-                        ? "blue"
-                        : "red"
-                  }
-                  style={{ minWidth: 40, textAlign: "center" }}
-                >
-                  {LEVEL_LABELS[f.level] ?? f.level}
-                </Tag>
-                <span style={{ fontWeight: 600, fontSize: 13, minWidth: 140 }}>
-                  {f.factor}
-                </span>
-                <span style={{ fontSize: 12, color: "#595959" }}>
-                  {f.detail}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Card>
-    );
-  }
-
-  // Fallback: legacy demo data
-  const wa = detail.spe.winRateAnalysis;
+function ScoringBar({ scoring }: { scoring: ScoringSummaryResponse }) {
+  const color = GRADE_COLORS[scoring.grade];
   return (
-    <Card>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
+        padding: "12px 20px",
+        background: "#fff",
+        border: "1px solid #e8e8e8",
+        borderRadius: 8,
+        marginBottom: 16,
+      }}
+    >
+      {/* Grade circle */}
       <div
         style={{
+          width: 48,
+          height: 48,
+          borderRadius: "50%",
+          background: `${color}15`,
+          border: `3px solid ${color}`,
           display: "flex",
           alignItems: "center",
-          gap: 16,
-          marginBottom: 16,
+          justifyContent: "center",
+          fontWeight: 800,
+          fontSize: 14,
+          color,
+          flexShrink: 0,
         }}
       >
-        <GradeBadge grade={wa.overallGrade} size="large" />
-        <span style={{ fontSize: 20, fontWeight: 700 }}>
-          승소가능성: {wa.overallProbability}%
-        </span>
+        {GRADE_LABELS[scoring.grade]}
       </div>
-      <div>
-        <h4 style={{ marginBottom: 8 }}>근거 요약:</h4>
-        <ul style={{ margin: 0, paddingLeft: 20 }}>
-          {wa.overallBasis.map((basis, idx) => (
-            <li
-              key={idx}
-              style={{ marginBottom: 4, lineHeight: 1.7, color: "#555" }}
-            >
-              {basis}
-            </li>
-          ))}
-        </ul>
+
+      {/* Probability */}
+      <div style={{ flexShrink: 0 }}>
+        <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1.2 }}>
+          {scoring.win_probability}%
+        </div>
+        <div style={{ fontSize: 11, color: "#999" }}>
+          신뢰도: {LEVEL_LABELS[scoring.confidence] ?? scoring.confidence}
+        </div>
       </div>
-    </Card>
+
+      {/* Progress bar */}
+      <div style={{ flex: 1, minWidth: 100 }}>
+        <Progress
+          percent={scoring.win_probability}
+          strokeColor={color}
+          showInfo={false}
+          size={{ height: 10 }}
+        />
+      </div>
+
+      {/* Key factors (compact) */}
+      <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+        {scoring.key_factors.map((f, idx) => (
+          <Tag
+            key={idx}
+            color={
+              f.level === "high" ? "green" : f.level === "medium" ? "blue" : "red"
+            }
+            style={{ fontSize: 11 }}
+          >
+            {f.factor}: {LEVEL_LABELS[f.level] ?? f.level}
+          </Tag>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LegacyScoringBar({ detail }: { detail: FdaDetail }) {
+  const wa = detail.spe.winRateAnalysis;
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
+        padding: "12px 20px",
+        background: "#fff",
+        border: "1px solid #e8e8e8",
+        borderRadius: 8,
+        marginBottom: 16,
+      }}
+    >
+      <GradeBadge grade={wa.overallGrade} size="large" />
+      <span style={{ fontSize: 20, fontWeight: 700 }}>
+        승소가능성: {wa.overallProbability}%
+      </span>
+      <div style={{ flex: 1 }}>
+        <Progress
+          percent={wa.overallProbability}
+          showInfo={false}
+          size={{ height: 10 }}
+        />
+      </div>
+    </div>
   );
 }
 
 /* ══════════════════════════════════════════════
-   Section 2: 요건사실 구조 그래프
+   Section 2: 요건사실 구조 그래프 (전체 너비)
    ══════════════════════════════════════════════ */
 
 function RequirementStructureSection({
   detail,
-  strategy,
   logicGraphV3,
 }: {
   detail: FdaDetail;
-  strategy: StrategySimulation | null;
   logicGraphV3: LogicGraphV3Response | null;
 }) {
-  const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(
-    null,
-  );
-
   const hasV3 = logicGraphV3 && logicGraphV3.nodes.length > 0;
-  const strat = logicGraphV3?.strategy_summary;
 
-  /* ── Left Panel: 4-panel accordion ── */
-  const accordionItems = [];
-
-  if (hasV3 && strat) {
-    // Panel 1: Strengths
-    accordionItems.push({
-      key: "strengths",
-      label: (
-        <span>
-          <TrophyOutlined style={{ marginRight: 6, color: "#52c41a" }} />
-          강점 ({strat.strengths.length})
-        </span>
-      ),
-      children: (
-        <List
-          size="small"
-          dataSource={strat.strengths}
-          locale={{ emptyText: "강점 항목 없음" }}
-          renderItem={(s) => (
-            <List.Item
-              style={{ cursor: "pointer", padding: "6px 8px" }}
-              onClick={() => setHighlightedNodeId(s.master_code)}
-            >
-              <div style={{ width: "100%" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                  }}
-                >
-                  <CheckCircleFilled style={{ color: "#52c41a" }} />
-                  <Tag color="cyan" style={{ fontSize: 10 }}>
-                    {s.master_code}
-                  </Tag>
-                  <span style={{ fontWeight: 600, fontSize: 12 }}>
-                    {s.master_label}
-                  </span>
-                  <Tag
-                    color="green"
-                    style={{ marginLeft: "auto", fontSize: 10 }}
-                  >
-                    {s.precedent_ratio}
-                  </Tag>
-                </div>
-              </div>
-            </List.Item>
-          )}
-        />
-      ),
-    });
-
-    // Panel 2: Vulnerabilities
-    accordionItems.push({
-      key: "vulnerabilities",
-      label: (
-        <span>
-          <AlertOutlined style={{ marginRight: 6, color: "#f5222d" }} />
-          취약점 ({strat.vulnerabilities.length})
-        </span>
-      ),
-      children: (
-        <List
-          size="small"
-          dataSource={strat.vulnerabilities}
-          locale={{ emptyText: "취약점 없음" }}
-          renderItem={(v) => (
-            <List.Item
-              style={{ cursor: "pointer", padding: "6px 8px" }}
-              onClick={() => setHighlightedNodeId(v.target_node_id)}
-            >
-              <div style={{ width: "100%" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    marginBottom: 4,
-                  }}
-                >
-                  <span style={{ fontWeight: 600, fontSize: 12 }}>
-                    {v.threat_type}
-                  </span>
-                  <Tag
-                    color={
-                      v.risk_level === "high"
-                        ? "red"
-                        : v.risk_level === "medium"
-                          ? "orange"
-                          : "default"
-                    }
-                    style={{ marginLeft: "auto", fontSize: 10 }}
-                  >
-                    위험: {v.risk_level === "high" ? "높음" : v.risk_level === "medium" ? "중간" : "낮음"}
-                  </Tag>
-                </div>
-                <div style={{ fontSize: 11, color: "#595959" }}>
-                  판례 성공률:{" "}
-                  {Math.round(v.precedent_success_rate * 100)}%
-                  ({v.precedent_count}건)
-                </div>
-                {!v.client_can_rebut && (
-                  <div style={{ fontSize: 11, color: "#f5222d", marginTop: 2 }}>
-                    반박 어려움 — 필요 증거: {v.rebuttal_evidence_needed}
-                  </div>
-                )}
-              </div>
-            </List.Item>
-          )}
-        />
-      ),
-    });
-
-    // Panel 3: Evidence Gaps
-    accordionItems.push({
-      key: "evidence-gaps",
-      label: (
-        <span>
-          <WarningOutlined style={{ marginRight: 6, color: "#fa8c16" }} />
-          증거 갭 ({strat.evidence_gaps.length})
-        </span>
-      ),
-      children: (
-        <List
-          size="small"
-          dataSource={strat.evidence_gaps}
-          locale={{ emptyText: "증거 갭 없음" }}
-          renderItem={(g) => (
-            <List.Item style={{ padding: "6px 8px" }}>
-              <div style={{ width: "100%" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    marginBottom: 2,
-                  }}
-                >
-                  <Tag
-                    color={g.importance === "required" ? "red" : "orange"}
-                    style={{ fontSize: 10 }}
-                  >
-                    {g.importance === "required" ? "필수" : "권고"}
-                  </Tag>
-                  <Tag color="cyan" style={{ fontSize: 10 }}>
-                    {g.master_code}
-                  </Tag>
-                  <span style={{ fontWeight: 600, fontSize: 12 }}>
-                    {g.master_label}
-                  </span>
-                </div>
-                <div style={{ fontSize: 11, color: "#1677ff", marginTop: 2 }}>
-                  입증 방법: {g.how_to_prove}
-                </div>
-                <div style={{ fontSize: 11, color: "#999" }}>
-                  판례 필요 빈도: {g.winning_frequency}/{g.total_winning}
-                </div>
-              </div>
-            </List.Item>
-          )}
-        />
-      ),
-    });
-
-    // Panel 4: Opponent Arguments
-    accordionItems.push({
-      key: "opponent",
-      label: (
-        <span>
-          <span style={{ marginRight: 6, color: "#722ed1" }}>&#9876;</span>
-          상대방 예상 주장 ({strat.opponent_arguments.length})
-        </span>
-      ),
-      children: (
-        <List
-          size="small"
-          dataSource={strat.opponent_arguments}
-          locale={{ emptyText: "예상 주장 없음" }}
-          renderItem={(a, idx) => (
-            <List.Item
-              style={{ cursor: "pointer", padding: "6px 8px" }}
-              onClick={() => setHighlightedNodeId(a.node_id)}
-            >
-              <div style={{ width: "100%" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    marginBottom: 4,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontWeight: 700,
-                      fontSize: 12,
-                      color: "#722ed1",
-                    }}
-                  >
-                    {idx + 1}. {a.defense_type}
-                  </span>
-                  <Tag
-                    color={
-                      a.risk_level === "high"
-                        ? "red"
-                        : a.risk_level === "medium"
-                          ? "orange"
-                          : "default"
-                    }
-                    style={{ marginLeft: "auto", fontSize: 10 }}
-                  >
-                    {a.risk_level === "high" ? "높음" : a.risk_level === "medium" ? "중간" : "낮음"}
-                  </Tag>
-                </div>
-                <div style={{ fontSize: 11, color: "#595959", marginBottom: 2 }}>
-                  {a.description}
-                </div>
-                <div style={{ fontSize: 11, color: "#999" }}>
-                  성공률 {Math.round(a.precedent_success_rate * 100)}%
-                  ({a.precedent_count}건) | 반박 가능:{" "}
-                  {a.client_can_rebut ? "높음" : "낮음"}
-                </div>
-              </div>
-            </List.Item>
-          )}
-        />
-      ),
-    });
-  } else if (strategy) {
-    // Fallback to legacy strategy data
-    accordionItems.push(
-      {
-        key: "strengths",
-        label: `강점 (${strategy.goldenPaths.length})`,
-        children: (
-          <List
-            size="small"
-            dataSource={strategy.goldenPaths}
-            renderItem={(path) => (
-              <List.Item>
-                <div style={{ width: "100%" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <Tag
-                      color={
-                        path.rank === 1
-                          ? "gold"
-                          : path.rank === 2
-                            ? "blue"
-                            : "default"
-                      }
-                    >
-                      #{path.rank}
-                    </Tag>
-                    <span style={{ fontWeight: 600, fontSize: 13 }}>
-                      {path.argument}
-                    </span>
-                    <Tag color="green" style={{ marginLeft: "auto" }}>
-                      인용률 {Math.round(path.acceptanceRate * 100)}%
-                    </Tag>
-                  </div>
-                  <div style={{ fontSize: 12, color: "#595959", marginTop: 4 }}>
-                    {path.legalBasis}
-                  </div>
-                </div>
-              </List.Item>
-            )}
-          />
-        ),
-      },
-      {
-        key: "vulnerabilities",
-        label: `취약점 (${strategy.vulnerabilities.length})`,
-        children: (
-          <List
-            size="small"
-            dataSource={strategy.vulnerabilities}
-            renderItem={(v) => (
-              <List.Item>
-                <div style={{ width: "100%" }}>
-                  <span style={{ fontWeight: 600 }}>{v.targetArgument}</span>
-                  <Tag color="red" style={{ marginLeft: 8 }}>
-                    반박률 {Math.round(v.counterSuccessRate * 100)}%
-                  </Tag>
-                  <div style={{ fontSize: 12, color: "#595959", marginTop: 4 }}>
-                    {v.counterargument}
-                  </div>
-                </div>
-              </List.Item>
-            )}
-          />
-        ),
-      },
-      {
-        key: "evidence-gaps",
-        label: `증거 갭 (${strategy.evidenceGaps.filter((g) => !g.userHas).length})`,
-        children: (
-          <List
-            size="small"
-            dataSource={strategy.evidenceGaps}
-            renderItem={(g) => (
-              <List.Item>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    width: "100%",
-                  }}
-                >
-                  <Tag
-                    color={
-                      g.importance === "high"
-                        ? "red"
-                        : g.importance === "medium"
-                          ? "orange"
-                          : "default"
-                    }
-                  >
-                    {g.importance === "high"
-                      ? "필수"
-                      : g.importance === "medium"
-                        ? "권고"
-                        : "선택"}
-                  </Tag>
-                  <span style={{ fontWeight: 600 }}>{g.evidenceType}</span>
-                  {g.userHas ? (
-                    <Tag color="green" style={{ marginLeft: "auto" }}>
-                      보유
-                    </Tag>
-                  ) : (
-                    <Tag color="volcano" style={{ marginLeft: "auto" }}>
-                      미보유
-                    </Tag>
-                  )}
-                </div>
-              </List.Item>
-            )}
-          />
-        ),
-      },
-    );
+  if (!hasV3) {
+    return <GraphTab detail={detail} />;
   }
 
-  return (
-    <Row gutter={16}>
-      {/* Left 1/3: Strategy accordion */}
-      <Col span={8}>
-        {accordionItems.length > 0 ? (
-          <Collapse
-            defaultActiveKey={["strengths", "vulnerabilities"]}
-            size="small"
-            items={accordionItems}
-            style={{ maxHeight: 620, overflow: "auto" }}
-          />
-        ) : (
-          <Empty description="전략 분석 데이터가 없습니다." />
-        )}
-      </Col>
+  // Gap nodes summary (compact bar above graph)
+  const gaps = logicGraphV3.gap_nodes;
 
-      {/* Right 2/3: Logic Graph */}
-      <Col span={16}>
-        {hasV3 ? (
-          <Card size="small" title="요건사실 구조 그래프 (v3)">
-            <LogicGraphV3Flow
-              graphNodes={logicGraphV3.nodes}
-              graphEdges={logicGraphV3.edges}
-              highlightedNodeId={highlightedNodeId}
-            />
-          </Card>
-        ) : (
-          <GraphTab detail={detail} />
-        )}
-      </Col>
-    </Row>
+  return (
+    <div>
+      {/* Gap nodes alert bar */}
+      {gaps.length > 0 && (
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 6,
+            padding: "8px 12px",
+            background: "#fff7e6",
+            border: "1px solid #ffe58f",
+            borderRadius: 6,
+            marginBottom: 8,
+            fontSize: 12,
+          }}
+        >
+          <span style={{ fontWeight: 600, color: "#d48806" }}>
+            증거 갭 {gaps.length}건:
+          </span>
+          {gaps.slice(0, 5).map((g) => (
+            <Tag
+              key={g.master_code}
+              color={g.importance === "required" ? "red" : "orange"}
+              style={{ fontSize: 10 }}
+            >
+              {g.master_label} ({g.winning_frequency}/{g.total_winning})
+            </Tag>
+          ))}
+          {gaps.length > 5 && (
+            <span style={{ color: "#999" }}>+{gaps.length - 5}건</span>
+          )}
+        </div>
+      )}
+
+      {/* Full-width graph */}
+      <Card size="small" title="요건사실 구조 그래프" style={{ border: "1px solid #e8e8e8" }}>
+        <LogicGraphV3Flow
+          graphNodes={logicGraphV3.nodes}
+          graphEdges={logicGraphV3.edges}
+          advocateAnalysis={logicGraphV3.advocate_analysis}
+        />
+      </Card>
+    </div>
   );
 }
 
@@ -723,48 +356,6 @@ function SimilarPrecedentSection({
   const wa = detail.spe.winRateAnalysis;
   const pr = wa.precedentResearch;
 
-  const backendColumns = [
-    {
-      title: "사건번호",
-      dataIndex: "case_number",
-      key: "case_number",
-      width: 160,
-      render: (num: string, record: PrecedentResponse) => (
-        <a onClick={() => onPrecedentClick(record.precedent_id)}>
-          {num || "-"}
-        </a>
-      ),
-    },
-    {
-      title: "유불리",
-      dataIndex: "is_favorable",
-      key: "is_favorable",
-      width: 80,
-      render: (v: boolean | null) => {
-        if (v === null) return <Tag>미분류</Tag>;
-        return v ? (
-          <Tag color="green">유리</Tag>
-        ) : (
-          <Tag color="red">불리</Tag>
-        );
-      },
-    },
-    {
-      title: "법원",
-      dataIndex: "court_level",
-      key: "court_level",
-      width: 60,
-      render: (v: number) => {
-        const labels: Record<number, string> = {
-          1: "1심",
-          2: "2심",
-          3: "대법원",
-        };
-        return labels[v] ?? `${v}심`;
-      },
-    },
-  ];
-
   return (
     <Row gutter={16}>
       <Col span={8}>
@@ -873,7 +464,6 @@ function SimilarPrecedentSection({
 
 export default function WinProbabilitySubTab({
   detail,
-  strategy,
   precedents,
   graphData,
   analysisLoading,
@@ -882,48 +472,43 @@ export default function WinProbabilitySubTab({
   logicGraphV3 = null,
   similarPrecedents = null,
 }: Props) {
-  const collapseItems = [
-    {
-      key: "overall",
-      label: "종합 판단 + 등급",
-      children: (
-        <OverallJudgmentSection detail={detail} scoring={scoringSummary} />
-      ),
-    },
-    {
-      key: "structure",
-      label: "요건사실 구조 그래프",
-      children: (
-        <RequirementStructureSection
-          detail={detail}
-          strategy={strategy}
-          logicGraphV3={logicGraphV3}
-        />
-      ),
-    },
-    {
-      key: "precedents",
-      label: "유사 판례 정보",
-      children: (
-        <SimilarPrecedentSection
-          detail={detail}
-          precedents={precedents}
-          graphData={graphData}
-          analysisLoading={analysisLoading}
-          onPrecedentClick={onPrecedentClick}
-          similarPrecedents={similarPrecedents}
-        />
-      ),
-    },
-  ];
-
   return (
     <div style={{ padding: "16px 0" }}>
-      <Collapse
-        defaultActiveKey={["overall", "structure"]}
-        items={collapseItems}
-        style={{ background: "transparent" }}
+      {/* 1. Scoring summary bar (always visible) */}
+      {scoringSummary ? (
+        <ScoringBar scoring={scoringSummary} />
+      ) : (
+        <LegacyScoringBar detail={detail} />
+      )}
+
+      {/* 2. Requirement structure graph (full width, always visible) */}
+      <RequirementStructureSection
+        detail={detail}
+        logicGraphV3={logicGraphV3}
       />
+
+      {/* 3. Similar precedents (collapsible) */}
+      <div style={{ marginTop: 16 }}>
+        <Collapse
+          items={[
+            {
+              key: "precedents",
+              label: `유사 판례 (${similarPrecedents?.total ?? precedents.length}건)`,
+              children: (
+                <SimilarPrecedentSection
+                  detail={detail}
+                  precedents={precedents}
+                  graphData={graphData}
+                  analysisLoading={analysisLoading}
+                  onPrecedentClick={onPrecedentClick}
+                  similarPrecedents={similarPrecedents}
+                />
+              ),
+            },
+          ]}
+          style={{ background: "transparent" }}
+        />
+      </div>
     </div>
   );
 }

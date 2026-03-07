@@ -13,10 +13,12 @@ import GradeBadge from "@/components/shared/GradeBadge";
 import WargameSimulator from "@/components/fda/StrategyPanel/WargameSimulator";
 import { formatCurrency } from "@/lib/formatCurrency";
 import type { FdaDetail, StrategySimulation, Grade } from "@/data/types";
+import type { ScoringSummaryResponse, ScoringGrade } from "@/data/api-types";
 
 interface Props {
   detail: FdaDetail;
   strategy: StrategySimulation | null;
+  scoringSummary?: ScoringSummaryResponse | null;
 }
 
 function gradeToScore(grade: Grade): number {
@@ -34,11 +36,29 @@ function gradeToScore(grade: Grade): number {
   }
 }
 
-export default function SpeOverviewSubTab({ detail, strategy }: Props) {
+const SCORING_GRADE_TO_LEGACY: Record<ScoringGrade, Grade> = {
+  excellent: "A",
+  good: "B",
+  fair: "C",
+  risk: "D",
+};
+
+export default function SpeOverviewSubTab({ detail, strategy, scoringSummary }: Props) {
   const { spe } = detail;
 
+  // v3 scoring으로 승소가능성 점수 오버라이드
+  const winScore = scoringSummary
+    ? scoringSummary.win_probability
+    : gradeToScore(spe.winRateAnalysis.overallGrade);
+  const winGrade = scoringSummary
+    ? SCORING_GRADE_TO_LEGACY[scoringSummary.grade]
+    : spe.winRateAnalysis.overallGrade;
+  const winProb = scoringSummary
+    ? scoringSummary.win_probability
+    : spe.winRateAnalysis.overallProbability;
+
   const radarData = [
-    { axis: "승소가능성", score: gradeToScore(spe.winRateAnalysis.overallGrade) },
+    { axis: "승소가능성", score: winScore },
     { axis: "소송기간", score: gradeToScore(spe.durationAnalysis.grade) },
     { axis: "회수금액", score: gradeToScore(spe.recoveryAnalysis.grade) },
     { axis: "소송비용", score: gradeToScore(spe.costAnalysis.grade) },
@@ -76,9 +96,9 @@ export default function SpeOverviewSubTab({ detail, strategy }: Props) {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontWeight: 500 }}>승소가능성</span>
                 <Space>
-                  <GradeBadge grade={spe.winRateAnalysis.overallGrade} />
+                  <GradeBadge grade={winGrade} />
                   <span style={{ fontSize: 13, color: "#595959" }}>
-                    {spe.winRateAnalysis.overallProbability}%
+                    {winProb}%
                   </span>
                 </Space>
               </div>

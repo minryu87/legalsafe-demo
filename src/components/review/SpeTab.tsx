@@ -41,7 +41,7 @@ export default function SpeTab({
     {
       key: "overview",
       label: "SPE 종합",
-      children: <SpeOverviewSubTab detail={detail} strategy={strategy} />,
+      children: <SpeOverviewSubTab detail={detail} strategy={strategy} scoringSummary={scoringSummary ?? null} />,
     },
     {
       key: "win",
@@ -49,7 +49,6 @@ export default function SpeTab({
       children: (
         <WinProbabilitySubTab
           detail={detail}
-          strategy={strategy}
           precedents={precedents}
           graphData={graphData}
           analysisLoading={analysisLoading}

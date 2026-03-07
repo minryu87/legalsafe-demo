@@ -362,6 +362,24 @@ export interface RelatedPrecedentRef {
   court_accepted: boolean;
 }
 
+export interface DefenseThreat {
+  label: string;
+  le_code: string;
+  success_rate: number;
+  frequency: number;
+  required_mfs: Array<{ code: string; label: string }>;
+}
+
+export interface EvidenceLink {
+  name: string;
+}
+
+export interface StatisticalDetail {
+  total: number;
+  favorable: number;
+  unfavorable: number;
+}
+
 export interface LogicGraphNode {
   id: string;
   type: LogicNodeType;
@@ -375,6 +393,15 @@ export interface LogicGraphNode {
   is_missing: boolean;
   precedent_stats: PrecedentStat | null;
   related_precedents: RelatedPrecedentRef[];
+  // LE enrichment
+  statistical_win_rate?: number | null;
+  statistical_detail?: StatisticalDetail | null;
+  defense_threats?: DefenseThreat[] | null;
+  // MF enrichment
+  probative_score?: number | null;
+  probative_verdict?: string | null;
+  probative_reasoning?: string | null;
+  evidence_links?: EvidenceLink[] | null;
 }
 
 export interface LogicGraphEdge {
@@ -439,11 +466,31 @@ export interface StrategySummaryV3 {
   opponent_arguments: OpponentArgument[];
 }
 
+export interface AdvocateRebuttal {
+  opponent_point: string;
+  rebuttal: string;
+  supporting_precedent: string;
+}
+
+export interface OpponentRebuttal {
+  applicant_point: string;
+  counter: string;
+  supporting_precedent: string;
+}
+
+export interface AdvocateAnalysis {
+  applicant_rebuttals?: AdvocateRebuttal[];
+  risk_factors?: string[];
+  opponent_defense?: string;
+  opponent_rebuttals?: OpponentRebuttal[];
+}
+
 export interface LogicGraphV3Response {
   nodes: LogicGraphNode[];
   edges: LogicGraphEdge[];
   gap_nodes: GapNode[];
   strategy_summary: StrategySummaryV3;
+  advocate_analysis?: AdvocateAnalysis | null;
 }
 
 // ── v3 유사 판례 ──
