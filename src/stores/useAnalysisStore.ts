@@ -1,6 +1,6 @@
 /**
  * Analysis Store
- * 판례 + 전략 + 보고서 + 그래프 데이터
+ * 판례 + 전략 + 보고서 + 그래프 데이터 + v3 API
  */
 
 import { create } from "zustand";
@@ -8,23 +8,38 @@ import type {
   PrecedentResponse,
   ReportResponse,
   PrecedentGraphResponse,
+  ScoringSummaryResponse,
+  LogicGraphV3Response,
+  SimilarPrecedentsResponse,
 } from "@/data/api-types";
 import type { StrategySimulation } from "@/data/types";
 import { listPrecedents, getAgentLogByType } from "@/lib/api/debug";
 import { getReport } from "@/lib/api/report";
 import { getGraphData } from "@/lib/api/search";
+import {
+  getScoringSummary,
+  getLogicGraphV3,
+  getSimilarPrecedents,
+} from "@/lib/api/analysis-v3";
 
 interface AnalysisState {
   precedents: PrecedentResponse[];
   strategy: StrategySimulation | null;
   report: ReportResponse | null;
   graphData: PrecedentGraphResponse | null;
+  // v3
+  scoringSummary: ScoringSummaryResponse | null;
+  logicGraphV3: LogicGraphV3Response | null;
+  similarPrecedents: SimilarPrecedentsResponse | null;
   loading: Record<string, boolean>;
 
   fetchPrecedents: (caseId: string) => Promise<void>;
   fetchStrategy: (caseId: string) => Promise<void>;
   fetchReport: (caseId: string) => Promise<void>;
   fetchGraph: (precedentId: string) => Promise<void>;
+  fetchScoringSummary: (caseId: string) => Promise<void>;
+  fetchLogicGraphV3: (caseId: string) => Promise<void>;
+  fetchSimilarPrecedents: (caseId: string) => Promise<void>;
   reset: () => void;
 }
 
@@ -33,6 +48,9 @@ export const useAnalysisStore = create<AnalysisState>((set) => ({
   strategy: null,
   report: null,
   graphData: null,
+  scoringSummary: null,
+  logicGraphV3: null,
+  similarPrecedents: null,
   loading: {},
 
   fetchPrecedents: async (caseId) => {
@@ -120,12 +138,54 @@ export const useAnalysisStore = create<AnalysisState>((set) => ({
     }
   },
 
+  fetchScoringSummary: async (caseId) => {
+    set((s) => ({ loading: { ...s.loading, scoring: true } }));
+    try {
+      const res = await getScoringSummary(caseId);
+      set((s) => ({
+        scoringSummary: res,
+        loading: { ...s.loading, scoring: false },
+      }));
+    } catch {
+      set((s) => ({ loading: { ...s.loading, scoring: false } }));
+    }
+  },
+
+  fetchLogicGraphV3: async (caseId) => {
+    set((s) => ({ loading: { ...s.loading, logicGraphV3: true } }));
+    try {
+      const res = await getLogicGraphV3(caseId);
+      set((s) => ({
+        logicGraphV3: res,
+        loading: { ...s.loading, logicGraphV3: false },
+      }));
+    } catch {
+      set((s) => ({ loading: { ...s.loading, logicGraphV3: false } }));
+    }
+  },
+
+  fetchSimilarPrecedents: async (caseId) => {
+    set((s) => ({ loading: { ...s.loading, similarPrecedents: true } }));
+    try {
+      const res = await getSimilarPrecedents(caseId);
+      set((s) => ({
+        similarPrecedents: res,
+        loading: { ...s.loading, similarPrecedents: false },
+      }));
+    } catch {
+      set((s) => ({ loading: { ...s.loading, similarPrecedents: false } }));
+    }
+  },
+
   reset: () =>
     set({
       precedents: [],
       strategy: null,
       report: null,
       graphData: null,
+      scoringSummary: null,
+      logicGraphV3: null,
+      similarPrecedents: null,
       loading: {},
     }),
 }));

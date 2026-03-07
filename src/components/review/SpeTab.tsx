@@ -5,6 +5,9 @@ import type { FdaDetail, StrategySimulation } from "@/data/types";
 import type {
   PrecedentResponse,
   PrecedentGraphResponse,
+  ScoringSummaryResponse,
+  LogicGraphV3Response,
+  SimilarPrecedentsResponse,
 } from "@/data/api-types";
 import SpeOverviewSubTab from "@/components/review/SpeOverviewSubTab";
 import WinProbabilitySubTab from "@/components/review/WinProbabilitySubTab";
@@ -17,6 +20,10 @@ interface Props {
   graphData: PrecedentGraphResponse | null;
   analysisLoading: Record<string, boolean>;
   onPrecedentClick: (precedentId: string) => void;
+  // v3
+  scoringSummary?: ScoringSummaryResponse | null;
+  logicGraphV3?: LogicGraphV3Response | null;
+  similarPrecedents?: SimilarPrecedentsResponse | null;
 }
 
 export default function SpeTab({
@@ -26,6 +33,9 @@ export default function SpeTab({
   graphData,
   analysisLoading,
   onPrecedentClick,
+  scoringSummary,
+  logicGraphV3,
+  similarPrecedents,
 }: Props) {
   const items = [
     {
@@ -44,6 +54,9 @@ export default function SpeTab({
           graphData={graphData}
           analysisLoading={analysisLoading}
           onPrecedentClick={onPrecedentClick}
+          scoringSummary={scoringSummary}
+          logicGraphV3={logicGraphV3}
+          similarPrecedents={similarPrecedents}
         />
       ),
     },

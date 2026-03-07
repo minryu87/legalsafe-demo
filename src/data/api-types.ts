@@ -318,6 +318,204 @@ export interface AttorneyIntakeDetailResponse {
   attorney_firm: string | null;
 }
 
+// ── v3 종합 판단 (ScoringEngine) ──
+
+export type ScoringGrade = "excellent" | "good" | "fair" | "risk";
+export type FactorLevel = "high" | "medium" | "low";
+
+export interface ScoringKeyFactor {
+  factor: string;
+  level: FactorLevel;
+  detail: string;
+}
+
+export interface ScoringSummaryResponse {
+  win_probability: number;
+  grade: ScoringGrade;
+  confidence: "high" | "medium" | "low";
+  key_factors: ScoringKeyFactor[];
+}
+
+// ── v3 요건사실 구조 그래프 ──
+
+export type LogicNodeType =
+  | "domain"
+  | "legal_effect"
+  | "major_fact"
+  | "indirect_fact"
+  | "evidence"
+  | "defense_argument";
+
+export type AssessmentLevel = "good" | "bad" | "neutral" | "warning";
+export type NodeSide = "applicant" | "opponent" | "court";
+
+export interface PrecedentStat {
+  satisfied_win: number;
+  unsatisfied_lose: number;
+  total_precedents: number;
+}
+
+export interface RelatedPrecedentRef {
+  precedent_id: string;
+  case_number: string;
+  excerpt: string;
+  court_accepted: boolean;
+}
+
+export interface LogicGraphNode {
+  id: string;
+  type: LogicNodeType;
+  label: string;
+  side: NodeSide;
+  master_code: string | null;
+  master_label: string | null;
+  assessment: AssessmentLevel;
+  assessment_reason: string;
+  court_accepted: boolean | null;
+  is_missing: boolean;
+  precedent_stats: PrecedentStat | null;
+  related_precedents: RelatedPrecedentRef[];
+}
+
+export interface LogicGraphEdge {
+  source: string;
+  target: string;
+  type: "supports" | "requires" | "contradicts" | "proves";
+  strength: "strong" | "moderate" | "weak";
+  is_mapped: boolean;
+}
+
+export interface GapNode {
+  master_code: string;
+  master_label: string;
+  importance: "required" | "recommended" | "optional";
+  how_to_prove: string;
+  winning_frequency: number;
+  total_winning: number;
+  precedent_examples: RelatedPrecedentRef[];
+}
+
+export interface StrengthItem {
+  master_code: string;
+  master_label: string;
+  satisfied: boolean;
+  precedent_ratio: string;
+}
+
+export interface VulnerabilityItemV3 {
+  threat_type: string;
+  risk_level: "high" | "medium" | "low";
+  precedent_success_rate: number;
+  precedent_count: number;
+  client_can_rebut: boolean;
+  rebuttal_evidence_needed: string;
+  target_node_id: string;
+}
+
+export interface EvidenceGapV3 {
+  master_code: string;
+  master_label: string;
+  importance: "required" | "recommended" | "optional";
+  winning_frequency: number;
+  total_winning: number;
+  how_to_prove: string;
+}
+
+export interface OpponentArgument {
+  node_id: string;
+  defense_type: string;
+  description: string;
+  precedent_success_rate: number;
+  precedent_count: number;
+  risk_level: "high" | "medium" | "low";
+  client_can_rebut: boolean;
+  target_node_id: string;
+}
+
+export interface StrategySummaryV3 {
+  strengths: StrengthItem[];
+  vulnerabilities: VulnerabilityItemV3[];
+  evidence_gaps: EvidenceGapV3[];
+  opponent_arguments: OpponentArgument[];
+}
+
+export interface LogicGraphV3Response {
+  nodes: LogicGraphNode[];
+  edges: LogicGraphEdge[];
+  gap_nodes: GapNode[];
+  strategy_summary: StrategySummaryV3;
+}
+
+// ── v3 유사 판례 ──
+
+export interface MatchedCodes {
+  le_codes: string[];
+  mf_codes: string[];
+}
+
+export interface SimilarPrecedent {
+  precedent_id: string;
+  case_number: string;
+  court_level: number;
+  is_favorable: boolean;
+  outcome: string;
+  ruling_date: string;
+  similarity_score: number;
+  chart_x: number;
+  similarity_tier: number;
+  matched_codes: MatchedCodes;
+  structural_score: number;
+  contextual_score: number;
+  summary: string;
+}
+
+export interface TierInfo {
+  count: number;
+  description: string;
+}
+
+export interface SimilarPrecedentsResponse {
+  total: number;
+  tiers: Record<string, TierInfo>;
+  precedents: SimilarPrecedent[];
+}
+
+// ── v3 판례 상세 그래프 ──
+
+export interface PrecedentLogicNode {
+  id: string;
+  type: LogicNodeType;
+  label: string;
+  side: NodeSide;
+  master_code: string | null;
+  master_label: string | null;
+  court_accepted: boolean | null;
+  court_ruling_reason: string | null;
+  is_mapped: boolean;
+  overlaps_with_client: boolean;
+  client_evidence_match: string | null;
+}
+
+export interface PrecedentLogicEdge {
+  source: string;
+  target: string;
+  type: "supports" | "requires" | "contradicts" | "proves";
+  strength: "strong" | "moderate" | "weak";
+  is_mapped: boolean;
+  court_ruling: "accepted" | "rejected" | null;
+  ruling_reason: string | null;
+}
+
+export interface PrecedentLogicGraphResponse {
+  precedent_id: string;
+  case_number: string;
+  court_level: number;
+  outcome: string;
+  ruling_summary: string;
+  nodes: PrecedentLogicNode[];
+  edges: PrecedentLogicEdge[];
+}
+
 // ── 공통 ──
 
 export interface SuccessResponse {

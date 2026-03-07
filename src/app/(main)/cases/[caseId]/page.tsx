@@ -60,11 +60,17 @@ export default function CaseDetailPage() {
     strategy,
     report,
     graphData,
+    scoringSummary,
+    logicGraphV3,
+    similarPrecedents,
     loading: analysisLoading,
     fetchPrecedents,
     fetchStrategy,
     fetchReport,
     fetchGraph,
+    fetchScoringSummary,
+    fetchLogicGraphV3,
+    fetchSimilarPrecedents,
     reset: resetAnalysis,
   } = useAnalysisStore();
   const {
@@ -111,6 +117,10 @@ export default function CaseDetailPage() {
       fetchPrecedents(caseId);
       fetchStrategy(caseId);
       fetchUnderwriting(caseId);
+      // v3 API (graceful fallback if not available)
+      fetchScoringSummary(caseId);
+      fetchLogicGraphV3(caseId);
+      fetchSimilarPrecedents(caseId);
     }
     if (isSectionAvailable("report", currentStatus)) {
       fetchReport(caseId);
@@ -159,6 +169,9 @@ export default function CaseDetailPage() {
           graphData={graphData}
           analysisLoading={analysisLoading}
           onPrecedentClick={handlePrecedentClick}
+          scoringSummary={scoringSummary}
+          logicGraphV3={logicGraphV3}
+          similarPrecedents={similarPrecedents}
         />
       ) : noData,
     },
@@ -191,6 +204,9 @@ export default function CaseDetailPage() {
     graphData,
     report,
     analysisLoading,
+    scoringSummary,
+    logicGraphV3,
+    similarPrecedents,
     caseDetail?.review_decision,
   ]); // eslint-disable-line react-hooks/exhaustive-deps
 
